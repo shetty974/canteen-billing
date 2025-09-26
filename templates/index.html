@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Canteen Billing</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Canteen" />
+</head>
+<body>
+  <div class="app">
+    <div class="card header">
+      <div>
+        <h1>🍽️ Canteen Billing</h1>
+        <p class="subtitle">Choose items and quantities, then generate your bill.</p>
+      </div>
+    </div>
+
+    <form method="post" class="card container">
+      <div class="grid">
+        {% for category, items in menu.items() %}
+        <section class="card section">
+          <h3>{{ category }}</h3>
+          {% for item, price in items.items() %}
+          <div class="item-row">
+            <div class="item-meta">
+              <strong>{{ item }}</strong>
+              <span class="price">Rs. {{ price }}</span>
+            </div>
+            <div class="qty-wrap">
+              <button type="button" class="step" data-step="-1" aria-label="Decrease">-</button>
+              <input class="qty" type="number" min="0" name="{{ item }}" value="" placeholder="0" />
+              <button type="button" class="step" data-step="1" aria-label="Increase">+</button>
+            </div>
+          </div>
+          {% endfor %}
+        </section>
+        {% endfor %}
+      </div>
+
+      <div class="actions no-print">
+        <button type="submit">Generate Bill</button>
+        <button type="button" class="secondary" id="clearBtn">Clear</button>
+        <button type="button" class="secondary" id="installBtn">📱 Install App</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // PWA install prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+            installBtn.style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        // Manual installation instructions
+        alert('📱 To install this app on your phone:\n\n1. Open this page on your Android phone\n2. In Chrome, tap the menu (⋮)\n3. Select "Install app" or "Add to Home screen"\n4. Follow the prompts\n\n💡 The app will work offline after installation!');
+      }
+    });
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+
+    const clearBtn=document.getElementById('clearBtn');
+    clearBtn?.addEventListener('click',()=>{
+      document.querySelectorAll('input.qty').forEach(i=>i.value='');
+    });
+    document.querySelectorAll('.step').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const wrapper=btn.parentElement;const input=wrapper.querySelector('input.qty');
+        const delta=parseInt(btn.dataset.step||'0',10);
+        const current=parseInt(input.value||'0',10);
+        const next=Math.max(0,current+delta);
+        input.value= next === 0 ? '' : String(next);
+      });
+    });
+  </script>
+</body>
+</html>

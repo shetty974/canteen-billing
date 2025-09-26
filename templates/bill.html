@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bill #{{ order_id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Canteen" />
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <meta name="format-detection" content="telephone=no" />
+</head>
+<body>
+  <div class="app bill">
+    <div class="card container">
+      <h1>🧾 Bill #{{ order_id }}</h1>
+      <div class="subtitle">Date &amp; Time: {{ timestamp }}</div>
+
+      <div class="section">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="width:80px">Qty</th>
+              <th style="width:120px">Price</th>
+              <th style="width:120px">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item, qty, price, line_total in cart %}
+            <tr>
+              <td>{{ item }}</td>
+              <td>{{ qty }}</td>
+              <td>Rs. {{ price }}</td>
+              <td>Rs. {{ line_total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" style="text-align:right">Grand Total</td>
+              <td>Rs. {{ grand_total }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="actions no-print">
+        <button onclick="window.print()">Print</button>
+        <a href="{{ url_for('index') }}" class="btn secondary">New Order</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
